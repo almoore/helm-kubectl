@@ -5,7 +5,7 @@ jobs:
     docker: 
      # DLC does nothing here, its caching depends on commonality of the image layers.
      - image: alpine:3.9
-   steps:
+    steps:
       - setup_remote_docker: 
           docker_layer_caching: true
       - checkout
