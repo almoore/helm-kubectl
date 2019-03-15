@@ -1,7 +1,6 @@
 version: 2
 jobs:
   build:
-    machine: true
     docker: 
      # DLC does nothing here, its caching depends on commonality of the image layers.
      - image: alpine:3.9
