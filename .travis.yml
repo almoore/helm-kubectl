@@ -1,7 +1,7 @@
 sudo: required
 
 env:
-  DOCKER_IMAGE=almoore/helm-kubectl
+  DOCKER_IMAGE=alexgmoore/helm-kubectl
   DOCKER_TAG=2.13.0
 
 services:
