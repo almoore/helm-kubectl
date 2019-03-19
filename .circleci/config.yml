@@ -10,14 +10,16 @@ jobs:
       # start proprietary DB using private Docker image
       # with credentials stored in the UI
       - run: |
-          # docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+          DOCKER_CMD=${DOCKER_CMD:-docker}
+          $DOCKER_CMD login -u "$DOCKER_USER" -p "$DOCKER_PASS"
           if [ -z "${CIRCLE_TAG}" ]; then
             CIRCLE_TAG=latest
           fi
           VCS_REF=$(git rev-parse --short HEAD)
           BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          DOCKER_CMD=${DOCKER_CMD:-docker}
           # build the application image
-          echo docker build . \
+          $DOCKER_CMD build . \
             --build-arg VCS_REF=${VCS_REF} \
             --build-arg BUILD_DATE=${BUILD_DATE} \
             -t alexgmoore/helm-kubectl:${CIRCLE_TAG}
@@ -28,7 +30,11 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       # deploy the image
-      - run: docker push alexgmoore/helm-kubectl:$CIRCLE_TAG
+      - run: |
+          if [ -z "${CIRCLE_TAG}" ]; then
+            CIRCLE_TAG=latest
+          fi
+          docker push alexgmoore/helm-kubectl:$CIRCLE_TAG
 
 workflows:
   version: 2
