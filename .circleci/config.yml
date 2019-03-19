@@ -39,10 +39,6 @@ jobs:
 workflows:
   version: 2
   build_and_deploy:
-    triggers:
-      filters:
-        tags:
-          only: /^v.*/
     jobs:
       - build:
           filters:
