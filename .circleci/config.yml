@@ -1,10 +1,10 @@
 version: 2
 jobs:
   build:
-    docker: 
+    docker:
       - image: circleci/python:3.6.1
     steps:
-      - setup_remote_docker: 
+      - setup_remote_docker:
           docker_layer_caching: true
       - checkout
       # start proprietary DB using private Docker image
@@ -20,21 +20,38 @@ jobs:
             --build-arg VCS_REF=${VCS_REF} \
             --build-arg BUILD_DATE=${BUILD_DATE} \
             -t alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
-          docker push alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
+          $DOCKER_CMD save -o /caches/docker-image.tar alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
+          $DOCKER_CMD push alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
+      - save_cache:
+          key: v1-{{ .Branch }}-{{ epoch }}
+          paths:
+            - /caches/docker-image.tar
   publish:
     docker:
       - image: circleci/python:3.6.1
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
+      # restore the saved image
+      - restore_cache:
+        keys:
+          - v1-{{ .Branch }}
+        paths:
+          - /caches/docker-image.tar
+      - run:
+        name: Load Docker image layer cache
+        command: |
+          set +o pipefail
+          docker load -i /caches/docker-image.tar | true
       # deploy the image
       - run: |
+          DOCKER_CMD=${DOCKER_CMD:-docker}
           if [ -z "${CIRCLE_TAG}" ]; then
             CIRCLE_TAG=latest
           fi
-          docker pull alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
-          docker tag alexgmoore/helm-kubectl:${CIRCLE_BRANCH} alexgmoore/helm-kubectl:${CIRCLE_TAG}
-          docker push alexgmoore/helm-kubectl:${CIRCLE_TAG}
+          $DOCKER_CMD login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+          $DOCKER_CMD tag alexgmoore/helm-kubectl:${CIRCLE_BRANCH} alexgmoore/helm-kubectl:${CIRCLE_TAG}
+          $DOCKER_CMD push alexgmoore/helm-kubectl:${CIRCLE_TAG}
 
 workflows:
   version: 2
@@ -52,4 +69,3 @@ workflows:
               only: master
           requires:
             - build
-
