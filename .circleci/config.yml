@@ -12,9 +12,6 @@ jobs:
       - run: |
           DOCKER_CMD=${DOCKER_CMD:-docker}
           $DOCKER_CMD login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-          if [ -z "${CIRCLE_TAG}" ]; then
-            CIRCLE_TAG=latest
-          fi
           VCS_REF=$(git rev-parse --short HEAD)
           BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           DOCKER_CMD=${DOCKER_CMD:-docker}
@@ -22,7 +19,8 @@ jobs:
           $DOCKER_CMD build . \
             --build-arg VCS_REF=${VCS_REF} \
             --build-arg BUILD_DATE=${BUILD_DATE} \
-            -t alexgmoore/helm-kubectl:${CIRCLE_TAG}
+            -t alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
+          docker push alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
   publish:
     docker:
       - image: circleci/python:3.6.1
@@ -34,11 +32,17 @@ jobs:
           if [ -z "${CIRCLE_TAG}" ]; then
             CIRCLE_TAG=latest
           fi
-          docker push alexgmoore/helm-kubectl:$CIRCLE_TAG
+          docker pull alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
+          docker tag alexgmoore/helm-kubectl:${CIRCLE_BRANCH} alexgmoore/helm-kubectl:${CIRCLE_TAG}
+          docker push alexgmoore/helm-kubectl:${CIRCLE_TAG}
 
 workflows:
   version: 2
   build_and_deploy:
+    triggers:
+      filters:
+        tags:
+          only: /^v.*/
     jobs:
       - build:
           filters:
