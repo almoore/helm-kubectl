@@ -7,25 +7,26 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
-      # start proprietary DB using private Docker image
-      # with credentials stored in the UI
       - run: |
           DOCKER_CMD=${DOCKER_CMD:-docker}
-          $DOCKER_CMD login -u "$DOCKER_USER" -p "$DOCKER_PASS"
           VCS_REF=$(git rev-parse --short HEAD)
           BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           DOCKER_CMD=${DOCKER_CMD:-docker}
+          # login to docker registry
+          $DOCKER_CMD login -u "$DOCKER_USER" -p "$DOCKER_PASS"
           # build the application image
           $DOCKER_CMD build . \
             --build-arg VCS_REF=${VCS_REF} \
             --build-arg BUILD_DATE=${BUILD_DATE} \
             -t alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
-          $DOCKER_CMD save -o /caches/docker-image.tar alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
+          DOCKER_CMD=${DOCKER_CMD:-docker}
+          # save the docker image
+          $DOCKER_CMD save -o /tmp/docker-image.tar alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
           $DOCKER_CMD push alexgmoore/helm-kubectl:${CIRCLE_BRANCH}
       - save_cache:
           key: v1-{{ .Branch }}-{{ epoch }}
           paths:
-            - /caches/docker-image.tar
+            - /tmp/docker-image.tar
   publish:
     docker:
       - image: circleci/python:3.6.1
@@ -37,12 +38,12 @@ jobs:
         keys:
           - v1-{{ .Branch }}
         paths:
-          - /caches/docker-image.tar
+          - /tmp/docker-image.tar
       - run:
         name: Load Docker image layer cache
         command: |
           set +o pipefail
-          docker load -i /caches/docker-image.tar | true
+          docker load -i /tmp/docker-image.tar | true
       # deploy the image
       - run: |
           DOCKER_CMD=${DOCKER_CMD:-docker}
