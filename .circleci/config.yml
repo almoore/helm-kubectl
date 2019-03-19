@@ -10,11 +10,17 @@ jobs:
       # start proprietary DB using private Docker image
       # with credentials stored in the UI
       - run: |
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          # docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+          if [ -z "${CIRCLE_TAG}" ]; then
+            CIRCLE_TAG=latest
+          fi
+          VCS_REF=$(git rev-parse --short HEAD)
+          BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           # build the application image
-          docker build --build-arg VCS_REF=`git rev-parse --short HEAD` \
-          --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-          -t alexgmoore/helm-kubectl:$CIRCLE_TAG .
+          echo docker build . \
+            --build-arg VCS_REF=${VCS_REF} \
+            --build-arg BUILD_DATE=${BUILD_DATE} \
+            -t alexgmoore/helm-kubectl:${CIRCLE_TAG}
   publish:
     docker:
       - image: circleci/python:3.6.1
@@ -32,10 +38,12 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-      - deploy:
+      - publish:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              only: master
           requires:
             - build
 

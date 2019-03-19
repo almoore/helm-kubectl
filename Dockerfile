@@ -12,9 +12,12 @@ LABEL org.label-schema.vcs-ref=$VCS_REF \
 
 # Note: Latest version of kubectl may be found at:
 # https://aur.archlinux.org/packages/kubectl-bin/
+
 ARG KUBE_VERSION="v1.13.4"
+
 # Note: Latest version of helm may be found at:
 # https://github.com/kubernetes/helm/releases
+
 ARG HELM_VERSION="v2.13.0"
 
 RUN apk add --no-cache ca-certificates bash git openssh \
