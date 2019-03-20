@@ -14,9 +14,9 @@ jobs:
           # login to docker registry
           $DOCKER_CMD login -u "$DOCKER_USER" -p "$DOCKER_PASS"
           BUILD_TAG=latest
-          if [ -z "${CIRCLE_TAG}" ]; then
+          if [ ! -z "${CIRCLE_TAG}" ]; then
             BUILD_TAG=${CIRCLE_TAG}
-          elif [ -z "${CIRCLE_BRANCH}" ]; then
+          elif [ ! -z "${CIRCLE_BRANCH}" ]; then
             BUILD_TAG=${CIRCLE_BRANCH}
           fi
           # build the application image
@@ -48,13 +48,16 @@ jobs:
       - run: |
           DOCKER_CMD=${DOCKER_CMD:-docker}
           BUILD_TAG=latest
-          if [ -z "${CIRCLE_TAG}" ]; then
+          if [ ! -z "${CIRCLE_TAG}" ]; then
             BUILD_TAG=${CIRCLE_TAG}
-          elif [ -z "${CIRCLE_BRANCH}" ]; then
+          elif [ ! -z "${CIRCLE_BRANCH}" ]; then
             BUILD_TAG=${CIRCLE_BRANCH}
           fi
+          CIRCLE_TAG=${CIRCLE_TAG:-latest}
           $DOCKER_CMD login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-          $DOCKER_CMD tag alexgmoore/helm-kubectl:${BUILD_TAG} alexgmoore/helm-kubectl:${CIRCLE_TAG}
+          if [ "${CIRCLE_TAG}" != "${BUILD_TAG}" ]; then 
+            $DOCKER_CMD tag alexgmoore/helm-kubectl:${BUILD_TAG} alexgmoore/helm-kubectl:${CIRCLE_TAG}
+          fi
           $DOCKER_CMD push alexgmoore/helm-kubectl:${CIRCLE_TAG}
 
 workflows:
