@@ -18,7 +18,7 @@ ARG KUBE_VERSION="v1.10.2"
 # Note: Latest version of helm may be found at:
 # https://github.com/kubernetes/helm/releases
 
-ARG HELM_VERSION="v2.9.0"
+ARG HELM_VERSION="v2.9.1"
 
 RUN apk add --no-cache ca-certificates bash git openssh curl \
     && curl -sSkL https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl \
