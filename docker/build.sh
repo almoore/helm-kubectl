@@ -250,12 +250,11 @@ main() {
     setup
     parse_args "$@"
     if [ ! -z "$_VERSION" ]; then
-       if echo $VERSIONS | grep -q $_VERSION; then
+       #if echo $VERSIONS | grep -q $_VERSION; then
            set_versions $_VERSION
-       else
-           HELM_VERSION=$_VERSION
-           
-       fi
+       #else
+       #    HELM_VERSION=$_VERSION
+       #fi
        log "Using ALPINE_VERSION=${ALPINE_VERSION} - HELM_VERSION=${HELM_VERSION} - KUBE_VERSION=${KUBE_VERSION}"
        log "Creating Dockerfile for version $v"
        make_dockerfile
